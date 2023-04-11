@@ -33,6 +33,7 @@ Apify.main(async () => {
         recordingTimeAfterClick,
         lossyCompression,
         loslessCompression,
+        gifTime,
         proxyOptions,
     } = await Apify.getInput();
 
@@ -40,6 +41,7 @@ Apify.main(async () => {
 
     const browser = await Apify.launchPuppeteer({ proxyUrl: proxyConfiguration?.newUrl(), launchOptions: { timeout: 90000 } });
     const page = await browser.newPage();
+    let elapsedTime = 0;
 
     log.info(`Setting page viewport to ${viewportWidth}x${viewportHeight}`);
     await page.setViewport({
@@ -58,6 +60,7 @@ Apify.main(async () => {
     await page.goto(validUrl, { waitUntil: 'networkidle2' });
 
     if (waitToLoadPage) {
+        elapsedTime += waitToLoadPage;
         await wait(waitToLoadPage);
     }
 
@@ -84,10 +87,11 @@ Apify.main(async () => {
 
     // add first frame multiple times so there is some delay before gif starts visually scrolling
     await record(page, gif, recordingTimeBeforeAction, frameRate);
+    elapsedTime += recordingTimeBeforeAction;
 
     // start scrolling down and take screenshots
     if (scrollDown) {
-        await scrollDownProcess({ page, gif, viewportHeight, scrollPercentage });
+        await scrollDownProcess({ page, gif, viewportHeight, scrollPercentage, elapsedTime, gifTime, frameRate});
     }
 
     // click element and record the action
