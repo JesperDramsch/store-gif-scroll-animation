@@ -126,14 +126,14 @@ Apify.main(async () => {
     const kvStore = await Apify.openKeyValueStore();
 
     try {
-        const filenameOrig = `${baseFileName}_original`;
+        const filenameOrig = `${baseFileName}_original.gif`;
         await saveGif(filenameOrig, gifBuffer);
         toPushDataset.gifUrlOriginal = kvStore.getPublicUrl(filenameOrig);
 
         if (lossyCompression) {
             const lossyBuffer = await compressGif(gifBuffer, 'lossy');
             log.info('Lossy compression finished');
-            const filenameLossy = `${baseFileName}_lossy-comp`;
+            const filenameLossy = `${baseFileName}_lossy-comp.gif`;
             await saveGif(filenameLossy, lossyBuffer);
             toPushDataset.gifUrlLossy = kvStore.getPublicUrl(filenameLossy);
         }

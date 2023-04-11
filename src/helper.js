@@ -68,7 +68,7 @@ const scrollDownProcess = async ({ page, gif, viewportHeight, scrollPercentage, 
     const { pageHeight, initialPosition, scrollByAmount, scrolledTime } = await getScrollParameters({ page, viewportHeight, scrollPercentage, frameRate});
     let scrolledUntil = initialPosition;
 
-    while (pageHeight > scrolledUntil || gifTime > elapsedTime) {
+    while (pageHeight > scrolledUntil && gifTime > elapsedTime) {
         const screenshotBuffer = await takeScreenshot(page);
 
         gifAddFrame(screenshotBuffer, gif);
@@ -92,6 +92,13 @@ const getGifBuffer = (gif, chunks) => {
 
 const selectPlugin = (compressionType) => {
     switch (compressionType) {
+        case 'ultralossy':
+            return [
+                imageminGiflossy({
+                    lossy: 130,
+                    optimizationLevel: 3,
+                }),
+            ];
         case 'lossy':
             return [
                 imageminGiflossy({
