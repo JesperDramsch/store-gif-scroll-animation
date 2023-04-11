@@ -43,6 +43,15 @@
             "default": 10,
             "prefill": 10
         },
+        "gifTime": {
+            "title": "Total time for gif",
+            "type": "integer",
+            "description": "Time the final gif runs in total",
+            "editor": "number",
+            "unit": "%",
+            "default": 5000,
+            "prefill": 5000
+        },
         "recordingTimeBeforeAction": {
             "title": "Capture before action",
             "type": "integer",
