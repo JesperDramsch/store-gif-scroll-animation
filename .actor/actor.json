@@ -5,5 +5,5 @@
     "buildTag": "latest",
     "dockerfile": "./Dockerfile",
     "readme": "./README.md",
-    "input": "./input_schema.json",
+    "input": "./input_schema.json"
   }
