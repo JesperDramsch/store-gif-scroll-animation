@@ -46,7 +46,7 @@ const record = async (page, gif, recordingTime, frameRate) => {
     }
 };
 
-const getScrollParameters = async ({ page, viewportHeight, scrollPercentage frameRate}) => {
+const getScrollParameters = async ({ page, viewportHeight, scrollPercentage, frameRate}) => {
     // get page height to determine when we scrolled to the bottom
     const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight); // initially used body element height via .boundingbox() but this is not always equal to document height
     const scrollTop = await page.evaluate(() => document.documentElement.scrollTop);
