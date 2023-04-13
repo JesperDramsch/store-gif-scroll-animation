@@ -1,5 +1,14 @@
 const Apify = require('apify');
 const GifEncoder = require('gif-encoder');
+const autoconsent = require('@duckduckgo/autoconsent/dist/autoconsent.puppet.js');
+const extraRules = require('@duckduckgo/autoconsent/rules/rules.json');
+
+const consentomatic = extraRules.consentomatic;
+const rules = [
+    ...autoconsent.rules,
+    ...Object.keys(consentomatic).map(name => new autoconsent.ConsentOMaticCMP(`com_${name}`, consentomatic[name])),
+    ...extraRules.autoconsent.map(spec => autoconsent.createAutoCMP(spec)),
+];
 
 const {
     record,
@@ -56,6 +65,16 @@ Apify.main(async () => {
     // check in case if input url doesn't have 'https://' part
     const validUrl = url.includes('http') ? url : `https://${url}`;
 
+    page.once('load', async () => {
+        const tab = autoconsent.attachToPage(page, validUrl, rules, 10);
+        try {
+            await tab.checked;
+            await tab.doOptIn();
+        } catch (e) {
+            console.warn(`CMP error`, e);
+        }
+    });
+
     log.info(`Opening page: ${validUrl}`);
     await page.goto(validUrl, { waitUntil: 'networkidle2' });
 
@@ -75,6 +94,7 @@ Apify.main(async () => {
             log.info('Selector for cookie pop-up window is likely incorrect');
         }
     }
+    
 
     // set-up gif encoder
     const chunks = [];
