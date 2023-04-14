@@ -52,7 +52,7 @@ Apify.main(async () => {
     const page = await browser.newPage();
 
     await page.setDefaultNavigationTimeout(0); 
-    
+
     let elapsedTime = 0;
 
     log.info(`Setting page viewport to ${viewportWidth}x${viewportHeight}`);
@@ -79,7 +79,7 @@ Apify.main(async () => {
     });
 
     log.info(`Opening page: ${validUrl}`);
-    await page.goto(validUrl, { waitUntil: 'networkidle2' });
+    await page.goto(validUrl, { waitUntil: 'networkidle2', timeout: 0});
 
     if (waitToLoadPage) {
         await wait(waitToLoadPage);
