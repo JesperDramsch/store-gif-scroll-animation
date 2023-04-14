@@ -50,6 +50,9 @@ Apify.main(async () => {
 
     const browser = await Apify.launchPuppeteer({ proxyUrl: proxyConfiguration?.newUrl(), launchOptions: { timeout: 90000 } });
     const page = await browser.newPage();
+
+    await page.setDefaultNavigationTimeout(0); 
+    
     let elapsedTime = 0;
 
     log.info(`Setting page viewport to ${viewportWidth}x${viewportHeight}`);
@@ -79,7 +82,6 @@ Apify.main(async () => {
     await page.goto(validUrl, { waitUntil: 'networkidle2' });
 
     if (waitToLoadPage) {
-        elapsedTime += waitToLoadPage;
         await wait(waitToLoadPage);
     }
 
