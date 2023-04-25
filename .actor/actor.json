@@ -1,5 +1,5 @@
 {
-    "actorSpecification": 1, // always 1
+    "actorSpecification": 1,
     "name": "gif-scroll-animation-short",
     "version": "0.1",
     "buildTag": "latest",
