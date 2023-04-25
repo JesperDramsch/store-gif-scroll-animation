@@ -78,10 +78,6 @@ Apify.main(async () => {
         }
     });
 
-    await Apify.utils.puppeteer.blockRequests(page, {
-        extraUrlPatterns: ['adsbygoogle.js'],
-    });
-
     log.info(`Opening page: ${validUrl}`);
     await page.goto(validUrl, { waitUntil: 'networkidle2', timeout: 0});
 
