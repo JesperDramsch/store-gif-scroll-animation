@@ -10,7 +10,8 @@
 		"imagemin-giflossy": "^5.1.10",
 		"imagemin-gifsicle": "^6.0.1",
 		"pngjs": "^3.4.0",
-		"@duckduckgo/autoconsent": "^1.0.8"
+		"@duckduckgo/autoconsent": "^1.0.8",
+		"@cliqz/adblocker-puppeteer": "^1.26.5"
 	},
 	"devDependencies": {
 		"@apify/eslint-config": "^0.1.4",
