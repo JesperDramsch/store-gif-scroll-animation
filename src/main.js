@@ -2,6 +2,8 @@ const Apify = require('apify');
 const GifEncoder = require('gif-encoder');
 const autoconsent = require('@duckduckgo/autoconsent/dist/autoconsent.puppet.js');
 const extraRules = require('@duckduckgo/autoconsent/rules/rules.json');
+const PuppeteerBlocker = require('@cliqz/adblocker-puppeteer').PuppeteerBlocker
+const fetch = require('cross-fetch')
 
 const consentomatic = extraRules.consentomatic;
 const rules = [
@@ -77,6 +79,11 @@ Apify.main(async () => {
             console.warn(`CMP error`, e);
         }
     });
+
+    PuppeteerBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
+        blocker.enableBlockingInPage(page);
+    });
+
 
     log.info(`Opening page: ${validUrl}`);
     await page.goto(validUrl, { waitUntil: 'networkidle2', timeout: 0});
