@@ -78,9 +78,11 @@ Apify.main(async () => {
         }
     });
 
-    await Apify.utils.puppeteer.blockRequests(page, {
-        urlPatterns: ['adsbygoogle.js'],
-    });
+    if (!validUrl.includes('youtube.com/watch')) {
+        await Apify.utils.puppeteer.blockRequests(page, {
+            urlPatterns: ['adsbygoogle.js'],
+        });
+    } 
 
     log.info(`Opening page: ${validUrl}`);
     await page.goto(validUrl, { waitUntil: 'networkidle2', timeout: 0});
