@@ -59,7 +59,7 @@ const getScrollParameters = async ({ page, viewportHeight, scrolledTimes, frameR
         const scrollByAmount = 100;
     }
     const scrolledTime = 1000 / frameRate;
-    const scrolledTimes = scrolledTimes + 1;
+    scrolledTimes += 1;
 
     return {
         pageHeight,
@@ -72,10 +72,10 @@ const getScrollParameters = async ({ page, viewportHeight, scrolledTimes, frameR
 
 const scrollDownProcess = async ({ page, gif, viewportHeight, elapsedTime, gifTime, frameRate}) => {
     let scrolledTimes = 0;
+    const { pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime } = await getScrollParameters({ page, viewportHeight, scrolledTimes, frameRate});
     let scrolledUntil = initialPosition;
 
     while (pageHeight > scrolledUntil && gifTime > elapsedTime) {
-        const { pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime } = await getScrollParameters({ page, viewportHeight, scrolledTimes, frameRate});
         const screenshotBuffer = await takeScreenshot(page);
 
         gifAddFrame(screenshotBuffer, gif);
@@ -87,6 +87,8 @@ const scrollDownProcess = async ({ page, gif, viewportHeight, elapsedTime, gifTi
 
         scrolledUntil += scrollByAmount;
         elapsedTime += scrolledTime;
+
+        const {pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime} = await getScrollParameters({ page, viewportHeight, scrolledTimes, frameRate});
     }
 };
 
