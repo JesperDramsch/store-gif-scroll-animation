@@ -119,7 +119,7 @@ Apify.main(async () => {
 
     // start scrolling down and take screenshots
     if (scrollDown) {
-        await scrollDownProcess({ page, gif, viewportHeight, elapsedTime, gifTime, frameRate});
+        await scrollDownProcess({ page, gif, viewportHeight, scrollPercentage, elapsedTime, gifTime, frameRate});
     }
 
     // click element and record the action

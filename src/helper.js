@@ -46,50 +46,49 @@ const record = async (page, gif, recordingTime, frameRate) => {
     }
 };
 
-const getScrollParameters = async ({ page, viewportHeight, scrolledNumberTimes, frameRate}) => {
+const getScrollParameters = async ({ page, viewportHeight, scrollPercentage, frameRate}) => {
     // get page height to determine when we scrolled to the bottom
     const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight); // initially used body element height via .boundingbox() but this is not always equal to document height
     const scrollTop = await page.evaluate(() => document.documentElement.scrollTop);
 
     const initialPosition = viewportHeight + scrollTop;
-
-    let scrollByAmount = 100;
-
-    if (scrolledNumberTimes % 4 == 0 || scrolledNumberTimes % 5 == 0) {
-        scrollByAmount = 0;
-    }
+    const scrollByAmount = Math.round(viewportHeight * scrollPercentage / 100);
 
     const scrolledTime = 1000 / frameRate;
-    
-    scrolledNumberTimes += 1;
 
     return {
         pageHeight,
         initialPosition,
         scrollByAmount,
-        scrolledNumberTimes,
         scrolledTime
     };
 };
 
-const scrollDownProcess = async ({ page, gif, viewportHeight, elapsedTime, gifTime, frameRate }) => {
-    let { pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime } = await getScrollParameters({ page, viewportHeight, scrolledTimes: 0, frameRate });
+const scrollDownProcess = async ({ page, gif, viewportHeight, scrollPercentage, elapsedTime, gifTime, frameRate}) => {
+    const { pageHeight, initialPosition, scrollByPercent, scrolledTime } = await getScrollParameters({ page, viewportHeight, scrollPercentage, frameRate});
     let scrolledUntil = initialPosition;
+    let scrollTimes = 0;
+    let scrollByAmount = scrollByPercent;
 
     while (pageHeight > scrolledUntil && gifTime > elapsedTime) {
+        if (scrollTimes % 4 === 0 || scrollTimes % 5 === 0) {
+            scrollByAmount = 0;
+        } else {
+            scrollByAmount = 100;
+        }
+
         const screenshotBuffer = await takeScreenshot(page);
 
         gifAddFrame(screenshotBuffer, gif);
 
         log.info(`Scrolling down by ${scrollByAmount} pixels`);
-        await page.evaluate((scrollAmount) => {
-            window.scrollBy(0, scrollAmount);
+        await page.evaluate((scrollByAmount) => {
+            window.scrollBy(0, scrollByAmount);
         }, scrollByAmount);
 
         scrolledUntil += scrollByAmount;
         elapsedTime += scrolledTime;
-
-        pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime = await getScrollParameters({ page, viewportHeight, scrolledTimes, frameRate });
+        scrollTimes++;
     }
 };
 
