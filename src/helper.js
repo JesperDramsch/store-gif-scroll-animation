@@ -53,11 +53,12 @@ const getScrollParameters = async ({ page, viewportHeight, scrolledNumberTimes, 
 
     const initialPosition = viewportHeight + scrollTop;
 
+    let scrollByAmount = 100;
+
     if (scrolledNumberTimes % 4 == 0 || scrolledNumberTimes % 5 == 0) {
-        const scrollByAmount = 0;
-    } else {
-        const scrollByAmount = 100;
+        scrollByAmount = 0;
     }
+    
     const scrolledTime = 1000 / frameRate;
     scrolledNumberTimes += 1;
 
