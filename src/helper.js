@@ -46,33 +46,33 @@ const record = async (page, gif, recordingTime, frameRate) => {
     }
 };
 
-const getScrollParameters = async ({ page, viewportHeight, scrolledTimes, frameRate}) => {
+const getScrollParameters = async ({ page, viewportHeight, scrolledNumberTimes, frameRate}) => {
     // get page height to determine when we scrolled to the bottom
     const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight); // initially used body element height via .boundingbox() but this is not always equal to document height
     const scrollTop = await page.evaluate(() => document.documentElement.scrollTop);
 
     const initialPosition = viewportHeight + scrollTop;
 
-    if (scrolledTimes % 4 == 0 || scrolledTimes % 5 == 0) {
+    if (scrolledNumberTimes % 4 == 0 || scrolledNumberTimes % 5 == 0) {
         const scrollByAmount = 0;
     } else {
         const scrollByAmount = 100;
     }
     const scrolledTime = 1000 / frameRate;
-    scrolledTimes += 1;
+    scrolledNumberTimes += 1;
 
     return {
         pageHeight,
         initialPosition,
         scrollByAmount,
-        scrolledTimes,
+        scrolledNumberTimes,
         scrolledTime
     };
 };
 
 const scrollDownProcess = async ({ page, gif, viewportHeight, elapsedTime, gifTime, frameRate}) => {
-    let scrolledTimes = 0;
-    const { pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime } = await getScrollParameters({ page, viewportHeight, scrolledTimes, frameRate});
+    let scrolledNumberTimes = 0;
+    const { pageHeight, initialPosition, scrollByAmount, scrolledNumberTimes, scrolledTime } = await getScrollParameters({ page, viewportHeight, scrolledNumberTimes, frameRate});
     let scrolledUntil = initialPosition;
 
     while (pageHeight > scrolledUntil && gifTime > elapsedTime) {
@@ -88,7 +88,7 @@ const scrollDownProcess = async ({ page, gif, viewportHeight, elapsedTime, gifTi
         scrolledUntil += scrollByAmount;
         elapsedTime += scrolledTime;
 
-        const {pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime} = await getScrollParameters({ page, viewportHeight, scrolledTimes, frameRate});
+        const {pageHeight, initialPosition, scrollByAmount, scrolledNumberTimes, scrolledTime} = await getScrollParameters({ page, viewportHeight, scrolledNumberTimes, frameRate});
     }
 };
 
