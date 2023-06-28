@@ -87,7 +87,7 @@ const scrollDownProcess = async ({ page, gif, viewportHeight, elapsedTime, gifTi
         scrolledUntil += scrollByAmount;
         elapsedTime += scrolledTime;
 
-        ({ pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime } = await getScrollParameters({ page, viewportHeight, scrolledTimes, frameRate }));
+        pageHeight, initialPosition, scrollByAmount, scrolledTimes, scrolledTime = await getScrollParameters({ page, viewportHeight, scrolledTimes, frameRate });
     }
 };
 
