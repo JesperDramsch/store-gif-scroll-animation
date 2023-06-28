@@ -69,9 +69,11 @@ const scrollDownProcess = async ({ page, gif, viewportHeight, scrollPercentage, 
     let scrolledUntil = initialPosition;
     let scrollTimes = 0;
     let scrollByAmount = scrollByPercent;
+    const scrolls = 5;
+    const wait_scrolls = 3;
 
     while (pageHeight > scrolledUntil && gifTime > elapsedTime) {
-        if (scrollTimes % 4 === 0 || scrollTimes % 5 === 0) {
+        if (scrolltimes > scrolls && scrollTimes % (scrolls + wait_scrolls) > scrolls) {
             scrollByAmount = 0;
         } else {
             scrollByAmount = 100;
