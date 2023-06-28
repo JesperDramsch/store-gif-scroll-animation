@@ -69,14 +69,14 @@ const scrollDownProcess = async ({ page, gif, viewportHeight, scrollPercentage, 
     let scrolledUntil = initialPosition;
     let scrollTimes = 0;
     let scrollByAmount = scrollByPercent;
-    const scrolls = 5;
-    const wait_scrolls = 3;
+    const scrolls = 10;
+    const wait_scrolls = 7;
 
     while (pageHeight > scrolledUntil && gifTime > elapsedTime) {
-        if (scrollTimes > scrolls && scrollTimes % (scrolls + wait_scrolls) > scrolls) {
+        if (scrollTimes > scrolls && scrollTimes % (scrolls + wait_scrolls) >= scrolls) {
             scrollByAmount = 0;
         } else {
-            scrollByAmount = 100;
+            scrollByAmount = 50;
         }
 
         const screenshotBuffer = await takeScreenshot(page);
