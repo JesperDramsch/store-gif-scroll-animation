@@ -10,10 +10,10 @@
 		"imagemin-giflossy": "^5.1.10",
 		"imagemin-gifsicle": "^6.0.1",
 		"pngjs": "^3.4.0",
-		"@duckduckgo/autoconsent": "latest",
-		"@ghostery/adblocker-puppeteer": "latest",
-		"@faker-js/faker": "latest",
-    	"cross-fetch": "latest"
+		"@duckduckgo/autoconsent": "^1.0.0",
+		"@ghostery/adblocker-puppeteer": "^1.0.0",
+		"@faker-js/faker": "^8.3.1",
+		"cross-fetch": "^4.0.0"
 	},
 	"devDependencies": {
 		"@apify/eslint-config": "^0.1.4",

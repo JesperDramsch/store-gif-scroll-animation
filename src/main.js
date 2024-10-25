@@ -1,6 +1,6 @@
 const Apify = require('apify');
 const GifEncoder = require('gif-encoder');
-const faker = require('faker'); // Changed Faker to faker to match npm package
+const { faker } = require('@faker-js/faker'); // Updated faker import
 const autoconsent = require('@duckduckgo/autoconsent/dist/autoconsent.puppet.js');
 const extraRules = require('@duckduckgo/autoconsent/rules/rules.json');
 const { PuppeteerBlocker } = require('@ghostery/adblocker-puppeteer');
@@ -51,7 +51,7 @@ Apify.main(async () => {
 	const page = await browser.newPage();
 
 	const headers = {
-		'Accept-Language': faker.random.locale(),
+		'Accept-Language': faker.location.locale(),
 		'User-Agent': faker.internet.userAgent(),
 		'X-Forwarded-For': faker.internet.ip(),
 		'X-Real-IP': faker.internet.ip(),
@@ -66,7 +66,6 @@ Apify.main(async () => {
 	log.info(`Setting extra headers: ${JSON.stringify(headers)}`);
 
 	await page.setExtraHTTPHeaders(headers);
-
 	await page.setDefaultNavigationTimeout(0);
 
 	log.info('Setting up adblock');
@@ -89,34 +88,33 @@ Apify.main(async () => {
 		slowDownAnimationsFn(page);
 	}
 
-	// check in case if input url doesn't have 'https://' part
 	const validUrl = url.includes('http') ? url : `https://${url}`;
 
 	page.once('load', async () => {
 		try {
 			const tab = autoconsent.attachToPage(page, validUrl, rules, 10);
 
-			// Wait for tab to be ready and verify it exists
 			if (!tab) {
 				console.warn('CMP tab could not be created');
 				return;
 			}
 
-			// Add timeout to prevent hanging
-			const timeoutPromise = new Promise((_, reject) =>
-				setTimeout(() => reject(new Error('CMP check timed out')), 15000)
-			);
+			let checkTimeout;
+			const timeoutPromise = new Promise((_, reject) => {
+				checkTimeout = setTimeout(() => reject(new Error('CMP check timed out')), 15000);
+			});
 
-			// Wait for tab to be checked with timeout
-			await Promise.race([tab.checked, timeoutPromise]);
+			try {
+				await Promise.race([tab.checked, timeoutPromise]);
+			} finally {
+				clearTimeout(checkTimeout);
+			}
 
-			// Verify tab state before proceeding
 			if (!tab.cmp) {
 				console.info('No CMP detected on page');
 				return;
 			}
 
-			// Attempt to handle consent
 			const optInResult = await tab.doOptIn().catch((e) => {
 				console.warn('Failed to opt in:', e);
 				return null;
@@ -145,11 +143,9 @@ Apify.main(async () => {
 		await wait(waitToLoadPage);
 	}
 
-	// remove cookie window if specified
 	if (cookieWindowSelector) {
 		try {
 			await page.waitForSelector(cookieWindowSelector);
-
 			log.info('Removing cookie pop-up window');
 			await page.$eval(cookieWindowSelector, (el) => el.remove());
 		} catch (err) {
@@ -157,25 +153,21 @@ Apify.main(async () => {
 		}
 	}
 
-	// set-up gif encoder
 	const chunks = [];
 	const gif = new GifEncoder(viewportWidth, viewportHeight);
 
 	gif.setFrameRate(frameRate);
-	gif.setRepeat(0); // loop indefinitely
+	gif.setRepeat(0);
 	gif.on('data', (chunk) => chunks.push(chunk));
 	gif.writeHeader();
 
-	// add first frame multiple times so there is some delay before gif starts visually scrolling
 	await record(page, gif, recordingTimeBeforeAction, frameRate);
 	elapsedTime += recordingTimeBeforeAction;
 
-	// start scrolling down and take screenshots
 	if (scrollDown) {
 		await scrollDownProcess({ page, gif, viewportHeight, scrollPercentage, elapsedTime, gifTime, frameRate });
 	}
 
-	// click element and record the action
 	if (clickSelector) {
 		try {
 			await page.waitForSelector(clickSelector);
@@ -188,7 +180,7 @@ Apify.main(async () => {
 		await record(page, gif, recordingTimeAfterClick, frameRate);
 	}
 
-	browser.close();
+	await browser.close();
 
 	gif.finish();
 	const gifBuffer = await getGifBuffer(gif, chunks);
@@ -197,7 +189,6 @@ Apify.main(async () => {
 	const siteName = urlObj.hostname;
 	const baseFileName = `${siteName}-scroll`;
 
-	// Save to dataset so there is higher chance the user will find it
 	const toPushDataset = {
 		gifUrlOriginal: undefined,
 		gifUrlLossy: undefined,
@@ -230,6 +221,5 @@ Apify.main(async () => {
 	}
 
 	await Apify.pushData(toPushDataset);
-
 	log.info('Actor finished');
 });
