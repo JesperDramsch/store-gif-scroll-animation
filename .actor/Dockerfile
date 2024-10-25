@@ -4,6 +4,8 @@
 # The 16 represents the version of Node.js you want to use.
 FROM apify/actor-node-puppeteer-chrome:22
 
+# Update and install required packages as root
+USER root
 RUN apt-get update && \
     apt-get install -y build-essential python3 && \
     apt-get clean && \
