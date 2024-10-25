@@ -4,6 +4,11 @@
 # The 16 represents the version of Node.js you want to use.
 FROM apify/actor-node-puppeteer-chrome:22
 
+RUN apt-get update && \
+    apt-get install -y build-essential python3 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Second, copy just package.json and package-lock.json since it should be
 # the only file that affects "npm install" in the next step, to speed up the build
 COPY package*.json ./
