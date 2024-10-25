@@ -51,7 +51,7 @@ Apify.main(async () => {
 	const page = await browser.newPage();
 
 	const headers = {
-		'Accept-Language': faker.location.locale(),
+		'Accept-Language': 'en-US,en;q=0.5',
 		'User-Agent': faker.internet.userAgent(),
 		'X-Forwarded-For': faker.internet.ip(),
 		'X-Real-IP': faker.internet.ip(),
