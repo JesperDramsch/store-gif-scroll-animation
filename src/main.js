@@ -1,12 +1,10 @@
 const Apify = require('apify');
 const GifEncoder = require('gif-encoder');
-
-const Faker = require('faker');
+const faker = require('faker'); // Changed Faker to faker to match npm package
 const autoconsent = require('@duckduckgo/autoconsent/dist/autoconsent.puppet.js');
 const extraRules = require('@duckduckgo/autoconsent/rules/rules.json');
-
-import { PuppeteerBlocker } from '@ghostery/adblocker-puppeteer';
-import fetch from 'cross-fetch';
+const { PuppeteerBlocker } = require('@ghostery/adblocker-puppeteer');
+const fetch = require('cross-fetch');
 
 const consentomatic = extraRules.consentomatic;
 const rules = [
@@ -200,7 +198,6 @@ Apify.main(async () => {
 	const baseFileName = `${siteName}-scroll`;
 
 	// Save to dataset so there is higher chance the user will find it
-
 	const toPushDataset = {
 		gifUrlOriginal: undefined,
 		gifUrlLossy: undefined,
