@@ -2,7 +2,7 @@
 # the available images at https://sdk.apify.com/docs/guides/docker-images
 # You can also use any other image from Docker Hub.
 # The 16 represents the version of Node.js you want to use.
-FROM apify/actor-node-puppeteer-chrome:22
+FROM apify/actor-node-puppeteer-chrome:20
 
 # Update and install required packages as root
 USER root
