@@ -52,7 +52,7 @@ Apify.main(async () => {
 
 	const headers = {
 		'Accept-Language': 'en-US,en;q=0.5',
-		'User-Agent': faker.internet.userAgent(),
+		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0',
 		'X-Forwarded-For': faker.internet.ip(),
 		'X-Real-IP': faker.internet.ip(),
 		Referer: faker.internet.url(),
