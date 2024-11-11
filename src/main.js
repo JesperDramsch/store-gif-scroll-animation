@@ -57,10 +57,6 @@ Apify.main(async () => {
 		'X-Real-IP': faker.internet.ip(),
 		Referer: faker.internet.url(),
 		Origin: faker.internet.url(),
-		DNT: '1',
-		Connection: 'keep-alive',
-		'Cache-Control': 'no-cache',
-		Pragma: 'no-cache',
 	};
 
 	log.info(`Setting extra headers: ${JSON.stringify(headers)}`);
