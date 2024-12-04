@@ -3,7 +3,6 @@ const GifEncoder = require('gif-encoder');
 const { faker } = require('@faker-js/faker'); // Updated faker import
 const autoconsent = require('@duckduckgo/autoconsent/dist/autoconsent.puppet.js');
 const extraRules = require('@duckduckgo/autoconsent/rules/rules.json');
-const { PuppeteerBlocker } = require('@ghostery/adblocker-puppeteer');
 const fetch = require('cross-fetch');
 
 const consentomatic = extraRules.consentomatic;
@@ -63,28 +62,6 @@ Apify.main(async () => {
 
 	await page.setExtraHTTPHeaders(headers);
 	await page.setDefaultNavigationTimeout(0);
-
-	log.info('Setting up adblock');
-
-	const blocker = await PuppeteerBlocker.fromLists(fetch, ['https://easylist.to/easylist/easylist.txt'], {
-		enableCompression: true,
-		loadNetworkFilters: false,
-		behaviors: {
-			// Whitelist all CSS files and common CDN domains
-			allowAllRequestsOnDocument: (details) => {
-				return (
-					details.domain.includes('github.com') ||
-					details.domain.includes('githubusercontent.com') ||
-					details.url.endsWith('.css') ||
-					details.url.includes('/css/') ||
-					details.domain.includes('cloudflare.com') ||
-					details.domain.includes('fastly.net')
-				);
-			},
-		},
-	});
-
-	await blocker.enableBlockingInPage(page);
 
 	let elapsedTime = 0;
 
