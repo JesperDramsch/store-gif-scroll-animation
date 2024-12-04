@@ -99,6 +99,7 @@ Apify.main(async () => {
 		});
 
 		const validUrl = url.includes('http') ? url : `https://${url}`;
+		log.info(`Navigating to ${validUrl}`);
 
 		log.info(`Setting up content blocking.`);
 		let setupSuccess = false;
