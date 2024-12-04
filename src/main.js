@@ -7,112 +7,183 @@ const { record, scrollDownProcess, getGifBuffer, compressGif, saveGif } = requir
 const { setupPage } = require('./contentBlocker');
 
 const validateConfig = (config) => {
-    const required = ['url', 'viewportHeight', 'viewportWidth', 'frameRate'];
-    const missing = required.filter(key => !config[key]);
-    
-    if (missing.length > 0) {
-        throw new Error(`Missing required configuration: ${missing.join(', ')}`);
-    }
-    
-    if (config.viewportHeight < 100 || config.viewportHeight > 4000) {
-        throw new Error('Invalid viewport height');
-    }
-    
-    if (config.frameRate < 1 || config.frameRate > 60) {
-        throw new Error('Invalid frame rate');
-    }
+	const required = ['url', 'viewportHeight', 'viewportWidth', 'frameRate'];
+	const missing = required.filter((key) => !config[key]);
+
+	if (missing.length > 0) {
+		throw new Error(`Missing required configuration: ${missing.join(', ')}`);
+	}
+
+	if (config.viewportHeight < 100 || config.viewportHeight > 4000) {
+		throw new Error('Invalid viewport height');
+	}
+
+	if (config.frameRate < 1 || config.frameRate > 60) {
+		throw new Error('Invalid frame rate');
+	}
 };
 
 const cleanup = async (browser, gif) => {
-    try {
-        if (browser) {
-            await browser.close();
-        }
-        if (gif) {
-            gif.finish();
-        }
-    } catch (error) {
-        log.error('Cleanup error:', error);
-    }
+	try {
+		if (browser) {
+			await browser.close();
+		}
+		if (gif) {
+			gif.finish();
+		}
+	} catch (error) {
+		log.error('Cleanup error:', error);
+	}
 };
 
 Apify.main(async () => {
-    let browser;
-    let gif;
-    let chunks = [];
-    
-    try {
-        const {
-            url,
-            viewportHeight = 768,
-            viewportWidth = 1366,
-            waitToLoadPage,
-            frameRate,
-            recordingTimeBeforeAction,
-            scrollDown = true,
-            scrollPercentage,
-            clickSelector,
-            recordingTimeAfterClick,
-            lossyCompression,
-            loslessCompression,
-            gifTime,
-            proxyOptions,
-        } = await Apify.getInput();
+	let browser;
+	let gif;
+	let chunks = [];
 
-        validateConfig({ url, viewportHeight, viewportWidth, frameRate });
+	try {
+		const {
+			url,
+			viewportHeight = 768,
+			viewportWidth = 1366,
+			waitToLoadPage,
+			frameRate,
+			recordingTimeBeforeAction,
+			scrollDown = true,
+			scrollPercentage,
+			clickSelector,
+			recordingTimeAfterClick,
+			lossyCompression,
+			loslessCompression,
+			gifTime,
+			proxyOptions,
+		} = await Apify.getInput();
 
-        const proxyConfiguration = await Apify.createProxyConfiguration(proxyOptions);
+		validateConfig({ url, viewportHeight, viewportWidth, frameRate });
 
-        browser = await Apify.launchPuppeteer({
-            proxyUrl: proxyConfiguration?.newUrl(),
-            launchOptions: { 
-                timeout: 90000,
-                args: [
-                    '--disable-gpu',
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox'
-                ]
-            }
-        });
+		const proxyConfiguration = await Apify.createProxyConfiguration(proxyOptions);
 
-        const page = await browser.newPage();
+		browser = await Apify.launchPuppeteer({
+			proxyUrl: proxyConfiguration?.newUrl(),
+			launchOptions: {
+				timeout: 90000,
+				args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox'],
+			},
+		});
 
-        const headers = {
-            'Accept-Language': 'en-US,en;q=0.5',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
-            'X-Forwarded-For': faker.internet.ip(),
-            'X-Real-IP': faker.internet.ip(),
-            Referer: faker.internet.url(),
-            Origin: faker.internet.url(),
-        };
+		const page = await browser.newPage();
 
-        log.info(`Setting extra headers: ${JSON.stringify(headers)}`);
-        await page.setExtraHTTPHeaders(headers);
-        await page.setDefaultNavigationTimeout(0);
-        
-        let elapsedTime = 0;
+		const headers = {
+			'Accept-Language': 'en-US,en;q=0.5',
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
+			'X-Forwarded-For': faker.internet.ip(),
+			'X-Real-IP': faker.internet.ip(),
+			Referer: faker.internet.url(),
+			Origin: faker.internet.url(),
+		};
 
-        log.info(`Setting page viewport to ${viewportWidth}x${viewportHeight}`);
-        await page.setViewport({
-            width: viewportWidth,
-            height: viewportHeight,
-        });
+		log.info(`Setting extra headers: ${JSON.stringify(headers)}`);
+		await page.setExtraHTTPHeaders(headers);
+		await page.setDefaultNavigationTimeout(0);
 
-        const validUrl = url.includes('http') ? url : `https://${url}`;
-        await setupPage(page, validUrl);
+		let elapsedTime = 0;
 
-        if (waitToLoadPage) {
-            await new Promise(resolve => setTimeout(resolve, waitToLoadPage));
-        }
+		log.info(`Setting page viewport to ${viewportWidth}x${viewportHeight}`);
+		await page.setViewport({
+			width: viewportWidth,
+			height: viewportHeight,
+		});
 
-        gif = new GifEncoder(viewportWidth, viewportHeight);
-        gif.setFrameRate(frameRate);
-        gif.setRepeat(0);
-        gif.on('data', chunk => chunks.push(chunk));
-        gif.writeHeader();
+		const validUrl = url.includes('http') ? url : `https://${url}`;
+		await setupPage(page, validUrl);
 
-        await record(page, gif, recordingTimeBeforeAction, frameRate);
-        elapsedTime += recordingTimeBeforeAction;
+		if (waitToLoadPage) {
+			await new Promise((resolve) => setTimeout(resolve, waitToLoadPage));
+		}
 
-        if (scrollDown) {
-            await scrollDownProcess({ 
+		gif = new GifEncoder(viewportWidth, viewportHeight);
+		gif.setFrameRate(frameRate);
+		gif.setRepeat(0);
+		gif.on('data', (chunk) => chunks.push(chunk));
+		gif.writeHeader();
+
+		await record(page, gif, recordingTimeBeforeAction, frameRate);
+		elapsedTime += recordingTimeBeforeAction;
+
+		if (scrollDown) {
+			await scrollDownProcess({
+				page,
+				gif,
+				viewportHeight,
+				scrollPercentage,
+				elapsedTime,
+				gifTime,
+				frameRate,
+			});
+		}
+
+		if (clickSelector) {
+			try {
+				await page.waitForSelector(clickSelector);
+				log.info(`Clicking element with selector ${clickSelector}`);
+				await page.click(clickSelector);
+
+				if (recordingTimeAfterClick) {
+					await record(page, gif, recordingTimeAfterClick, frameRate);
+				}
+			} catch (error) {
+				log.error('Error during click operation:', error);
+				throw error;
+			}
+		}
+
+		await browser.close();
+		gif.finish();
+
+		const gifBuffer = await getGifBuffer(gif, chunks);
+		const urlObj = new URL(validUrl);
+		const siteName = urlObj.hostname;
+		const baseFileName = `${siteName}-scroll`;
+
+		const toPushDataset = {
+			gifUrlOriginal: undefined,
+			gifUrlLossy: undefined,
+			gifUrlLosless: undefined,
+		};
+
+		const kvStore = await Apify.openKeyValueStore();
+
+		try {
+			const filenameOrig = `${baseFileName}_original.gif`;
+			await saveGif(filenameOrig, gifBuffer);
+			toPushDataset.gifUrlOriginal = kvStore.getPublicUrl(filenameOrig);
+
+			if (lossyCompression) {
+				const lossyBuffer = await compressGif(gifBuffer, 'lossy');
+				log.info('Lossy compression finished');
+				const filenameLossy = `${baseFileName}_lossy-comp.gif`;
+				await saveGif(filenameLossy, lossyBuffer);
+				toPushDataset.gifUrlLossy = kvStore.getPublicUrl(filenameLossy);
+			}
+
+			if (loslessCompression) {
+				const loslessBuffer = await compressGif(gifBuffer, 'losless');
+				log.info('Losless compression finished');
+				const filenameLosless = `${baseFileName}_losless-comp.gif`;
+				await saveGif(filenameLosless, loslessBuffer);
+				toPushDataset.gifUrlLosless = kvStore.getPublicUrl(filenameLosless);
+			}
+		} catch (error) {
+			log.error('Error during gif processing:', error);
+			throw error;
+		}
+
+		await Apify.pushData(toPushDataset);
+		log.info('Actor finished successfully');
+	} catch (error) {
+		log.error('Actor failed:', error);
+		throw error;
+	} finally {
+		await cleanup(browser, gif);
+	}
+});
