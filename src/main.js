@@ -13,14 +13,6 @@ const validateConfig = (config) => {
 	if (missing.length > 0) {
 		throw new Error(`Missing required configuration: ${missing.join(', ')}`);
 	}
-
-	if (config.viewportHeight < 100 || config.viewportHeight > 4000) {
-		throw new Error('Invalid viewport height');
-	}
-
-	if (config.frameRate < 1 || config.frameRate > 60) {
-		throw new Error('Invalid frame rate');
-	}
 };
 
 const cleanup = async (browser, gif) => {
@@ -40,6 +32,7 @@ Apify.main(async () => {
 	let browser;
 	let gif;
 	let chunks = [];
+	let page;
 
 	try {
 		const input = await Apify.getInput();
@@ -47,7 +40,7 @@ Apify.main(async () => {
 			url,
 			viewportHeight = 768,
 			viewportWidth = 1366,
-			waitToLoadPage = 5000, // Default timeout
+			waitToLoadPage = 5000,
 			frameRate = 10,
 			recordingTimeBeforeAction = 1000,
 			scrollDown = true,
@@ -62,8 +55,9 @@ Apify.main(async () => {
 
 		validateConfig({ url, viewportHeight, viewportWidth, frameRate });
 
-		// Set up browser with proper timeout
 		const proxyConfiguration = await Apify.createProxyConfiguration(proxyOptions);
+
+		// Enhanced browser launch options
 		browser = await Apify.launchPuppeteer({
 			proxyUrl: proxyConfiguration?.newUrl(),
 			launchOptions: {
@@ -75,21 +69,17 @@ Apify.main(async () => {
 					'--disable-dev-shm-usage',
 					'--disable-web-security',
 					'--disable-features=IsolateOrigins,site-per-process',
+					'--disable-site-isolation-trials',
+					'--ignore-certificate-errors',
+					'--no-zygote',
+					'--single-process',
+					'--no-first-run',
 				],
 			},
 		});
 
-		// Create page with timeout
-		const page = await Promise.race([
-			browser.newPage(),
-			new Promise((_, reject) => setTimeout(() => reject(new Error('Page creation timeout')), 30000)),
-		]);
+		page = await browser.newPage();
 
-		if (!page) {
-			throw new Error('Failed to create new page');
-		}
-
-		// Set up headers and viewport
 		const headers = {
 			'Accept-Language': 'en-US,en;q=0.5',
 			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
@@ -101,9 +91,6 @@ Apify.main(async () => {
 
 		log.info(`Setting extra headers: ${JSON.stringify(headers)}`);
 		await page.setExtraHTTPHeaders(headers);
-		await page.setDefaultNavigationTimeout(60000);
-
-		let elapsedTime = 0;
 
 		log.info(`Setting page viewport to ${viewportWidth}x${viewportHeight}`);
 		await page.setViewport({
@@ -111,24 +98,27 @@ Apify.main(async () => {
 			height: viewportHeight,
 		});
 
-		// Set up page navigation with timeout
 		const validUrl = url.includes('http') ? url : `https://${url}`;
 
 		log.info(`Setting up content blocking.`);
-		try {
-			await Promise.race([
-				setupPage(page, validUrl),
-				new Promise((_, reject) => setTimeout(() => reject(new Error('Page navigation timeout')), 60000)),
-			]);
-		} catch (navigationError) {
-			log.error('Navigation failed:', navigationError);
-			throw navigationError;
+		let setupSuccess = false;
+		for (let attempt = 1; attempt <= 3 && !setupSuccess; attempt++) {
+			try {
+				await setupPage(page, validUrl);
+				setupSuccess = true;
+			} catch (error) {
+				log.warning(`Page setup attempt ${attempt} failed:`, error.message);
+				if (attempt === 3) {
+					throw new Error(`Failed to set up page after ${attempt} attempts`);
+				}
+				await new Promise((resolve) => setTimeout(resolve, 5000));
+			}
 		}
 
 		// Wait for network to be idle
 		log.info(`Waiting for network to idle.`);
 		try {
-			await page.waitForNetworkIdle({ timeout: 3000 }).catch(() => {
+			await page.waitForNetworkIdle({ timeout: 30000 }).catch(() => {
 				log.warning('Network did not reach idle state');
 			});
 		} catch (error) {
