@@ -33,6 +33,7 @@ Apify.main(async () => {
 	let gif;
 	let chunks = [];
 	let page;
+	let elapsedTime = 0; // Initialize elapsedTime here
 
 	try {
 		const input = await Apify.getInput();
@@ -57,7 +58,6 @@ Apify.main(async () => {
 
 		const proxyConfiguration = await Apify.createProxyConfiguration(proxyOptions);
 
-		// Enhanced browser launch options
 		browser = await Apify.launchPuppeteer({
 			proxyUrl: proxyConfiguration?.newUrl(),
 			launchOptions: {
@@ -137,11 +137,12 @@ Apify.main(async () => {
 		gif.on('data', (chunk) => chunks.push(chunk));
 		gif.writeHeader();
 
-		// Start recording
-		log.info('Starting recording process');
+		// Initial recording
+		log.info('Starting initial recording');
 		await record(page, gif, recordingTimeBeforeAction, frameRate);
 		elapsedTime += recordingTimeBeforeAction;
 
+		// Scroll if enabled
 		if (scrollDown) {
 			log.info('Starting scroll process');
 			await scrollDownProcess({
@@ -155,6 +156,7 @@ Apify.main(async () => {
 			});
 		}
 
+		// Handle click action if specified
 		if (clickSelector) {
 			try {
 				await page.waitForSelector(clickSelector, { timeout: 5000 });
@@ -163,13 +165,15 @@ Apify.main(async () => {
 
 				if (recordingTimeAfterClick) {
 					await record(page, gif, recordingTimeAfterClick, frameRate);
+					elapsedTime += recordingTimeAfterClick;
 				}
 			} catch (error) {
 				log.error('Error during click operation:', error);
 			}
 		}
 
-		// Process and save GIF
+		// Finalize and save GIF
+		log.info('Finalizing GIF');
 		await browser.close();
 		gif.finish();
 
