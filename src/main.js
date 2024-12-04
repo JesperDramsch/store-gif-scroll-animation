@@ -52,7 +52,7 @@ Apify.main(async () => {
 
 	const headers = {
 		'Accept-Language': 'en-US,en;q=0.5',
-		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0',
+		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
 		'X-Forwarded-For': faker.internet.ip(),
 		'X-Real-IP': faker.internet.ip(),
 		Referer: faker.internet.url(),
@@ -66,25 +66,25 @@ Apify.main(async () => {
 
 	log.info('Setting up adblock');
 
-	const blocker = await PuppeteerBlocker.fromLists(
-		fetch,
-		['https://easylist.to/easylist/easylist.txt', 'https://secure.fanboy.co.nz/fanboy-cookiemonster.txt'],
-		{
-			enableCompression: true,
-			loadNetworkFilters: false, // Less aggressive filtering
-			behaviors: {
-				// Whitelist GitHub's domains
-				allowAllRequestsOnDocument: (details) => {
-					return details.domain.includes('github.com') || details.domain.includes('githubusercontent.com');
-				},
+	const blocker = await PuppeteerBlocker.fromLists(fetch, ['https://easylist.to/easylist/easylist.txt'], {
+		enableCompression: true,
+		loadNetworkFilters: false,
+		behaviors: {
+			// Whitelist all CSS files and common CDN domains
+			allowAllRequestsOnDocument: (details) => {
+				return (
+					details.domain.includes('github.com') ||
+					details.domain.includes('githubusercontent.com') ||
+					details.url.endsWith('.css') ||
+					details.url.includes('/css/') ||
+					details.domain.includes('cloudflare.com') ||
+					details.domain.includes('fastly.net')
+				);
 			},
-		}
-	);
-	await blocker.enableBlockingInPage(page);
-
-	blocker.on('request-blocked', (request) => {
-		console.log('Blocked:', request.url);
+		},
 	});
+
+	await blocker.enableBlockingInPage(page);
 
 	let elapsedTime = 0;
 
@@ -142,12 +142,16 @@ Apify.main(async () => {
 
 	if (!validUrl.includes('youtube.com/watch')) {
 		await Apify.utils.puppeteer.blockRequests(page, {
-			urlPatterns: ['adsbygoogle.js'],
+			urlPatterns: ['adsbygoogle.js', 'googlesyndication.com', 'doubleclick.net', 'google-analytics.com'],
 		});
 	}
 
 	log.info(`Opening page: ${validUrl}`);
 	await page.goto(validUrl, { waitUntil: 'networkidle2', timeout: 0 });
+
+	page.on('requestfailed', (request) => {
+		log.debug(`Failed request: ${request.url()}`);
+	});
 
 	if (waitToLoadPage) {
 		await wait(waitToLoadPage);
