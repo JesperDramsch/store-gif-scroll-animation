@@ -66,11 +66,25 @@ Apify.main(async () => {
 
 	log.info('Setting up adblock');
 
-	const blocker = await PuppeteerBlocker.fromLists(fetch, [
-		'https://easylist.to/easylist/easylist.txt',
-		'https://secure.fanboy.co.nz/fanboy-cookiemonster.txt',
-	]);
+	const blocker = await PuppeteerBlocker.fromLists(
+		fetch,
+		['https://easylist.to/easylist/easylist.txt', 'https://secure.fanboy.co.nz/fanboy-cookiemonster.txt'],
+		{
+			enableCompression: true,
+			loadNetworkFilters: false, // Less aggressive filtering
+			behaviors: {
+				// Whitelist GitHub's domains
+				allowAllRequestsOnDocument: (details) => {
+					return details.domain.includes('github.com') || details.domain.includes('githubusercontent.com');
+				},
+			},
+		}
+	);
 	await blocker.enableBlockingInPage(page);
+
+	blocker.on('request-blocked', (request) => {
+		console.log('Blocked:', request.url);
+	});
 
 	let elapsedTime = 0;
 
